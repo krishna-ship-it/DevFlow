@@ -60,11 +60,11 @@ const Answer = ({ question, questionId, authorId }: Props) => {
         const editor = editorRef.current as any;
         editor.setContent("");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: `${error?.message || "something went wrong"}`,
+        title: `${error?.message! || "something went wrong"}`,
         variant: "destructive",
-        description: `${error?.code || 500}`,
+        description: `${error?.code! || 500}`,
       });
     } finally {
       setIsSubmitting(false);
