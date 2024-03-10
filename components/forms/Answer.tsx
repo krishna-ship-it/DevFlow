@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useForm } from 'react-hook-form';
+import { useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormMessage
-} from '../ui/form';
-import { z } from 'zod';
-import { AnswerSchma } from '@/lib/validations';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState } from 'react';
-import { Editor } from '@tinymce/tinymce-react';
-import { useTheme } from '@/context/ThemeProvider';
-import { Button } from '../ui/button';
-import Image from 'next/image';
-import { createAnswer } from '@/lib/actions/answer.action';
-import { usePathname } from 'next/navigation';
-import { toast } from '../ui/use-toast';
+  FormMessage,
+} from "../ui/form";
+import { z } from "zod";
+import { AnswerSchma } from "@/lib/validations";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRef, useState } from "react";
+import { Editor } from "@tinymce/tinymce-react";
+import { useTheme } from "@/context/ThemeProvider";
+import { Button } from "../ui/button";
+import Image from "next/image";
+import { createAnswer } from "@/lib/actions/answer.action";
+import { usePathname } from "next/navigation";
+import { toast } from "../ui/use-toast";
 
 interface Props {
   question: string;
@@ -35,8 +35,8 @@ const Answer = ({ question, questionId, authorId }: Props) => {
   const form = useForm<z.infer<typeof AnswerSchma>>({
     resolver: zodResolver(AnswerSchma),
     defaultValues: {
-      answer: ''
-    }
+      answer: "",
+    },
   });
 
   const handleCreatAnswer = async (values: z.infer<typeof AnswerSchma>) => {
@@ -46,23 +46,26 @@ const Answer = ({ question, questionId, authorId }: Props) => {
         content: values.answer,
         author: JSON.parse(authorId),
         question: JSON.parse(questionId),
-        path: pathname
+        path: pathname,
       });
 
       toast({
-        title: `${values.answer && 'Answer posted'}`,
-        description: 'Your answer has been posted successfully'
+        title: `${values.answer && "Answer posted"}`,
+        description: "Your answer has been posted successfully",
       });
 
       form.reset();
 
       if (editorRef.current) {
         const editor = editorRef.current as any;
-        editor.setContent('');
+        editor.setContent("");
       }
     } catch (error) {
-      console.log(error);
-      throw error;
+      toast({
+        title: `${error?.message || "something went wrong"}`,
+        variant: "destructive",
+        description: `${error?.code || 500}`,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -71,34 +74,36 @@ const Answer = ({ question, questionId, authorId }: Props) => {
   const generateAiAnswer = async () => {
     if (!authorId) return;
     setIsSubmittingAI(true);
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chatgpt`,
         {
-          method: 'POST',
-          body: JSON.stringify({ question })
+          method: "POST",
+          body: JSON.stringify({ question }),
         }
       );
-
       const aiAnswer = await response.json();
 
+      if (aiAnswer.error) {
+        throw new Error(aiAnswer.error);
+      }
       // convert plaintext to html
-      const formatedAnswer = aiAnswer.reply.replace(/\n/g, '<br />');
+      const formatedAnswer = aiAnswer?.reply?.replace(/\n/g, "<br />");
       if (editorRef.current) {
         const editor = editorRef.current as any;
         editor.setContent(formatedAnswer);
       }
-
       //  toast notification
       return toast({
-        title: `${aiAnswer.reply && 'Ai answer generated'}`,
-        description: 'Ai answer generated successfully'
+        title: `${aiAnswer.reply && "Ai answer generated"}`,
+        description: "Ai answer generated successfully",
       });
     } catch (error: any) {
       return toast({
-        title: `${error?.message}`,
-        variant: 'destructive',
-        description: `${error?.code}`
+        title: `${error?.message || "something went wrong"}`,
+        variant: "destructive",
+        description: `${error?.code || 500}`,
       });
     } finally {
       setIsSubmittingAI(false);
@@ -112,7 +117,11 @@ const Answer = ({ question, questionId, authorId }: Props) => {
         </h4>
         <Button
           className="btn light-border-2 gap-1.5 rounded-md px-4 py-2.5 text-primary-500 shadow-none dark:text-primary-500 "
-          onClick={generateAiAnswer}
+          onClick={(e) => {
+            e.preventDefault();
+
+            generateAiAnswer();
+          }}
         >
           {isSubmittingAI ? (
             <>Generating...</>
@@ -153,30 +162,30 @@ const Answer = ({ question, questionId, authorId }: Props) => {
                       height: 350,
                       menubar: false,
                       plugins: [
-                        'advlist',
-                        'autolink',
-                        'lists',
-                        'link',
-                        'image',
-                        'charmap',
-                        'preview',
-                        'anchor',
-                        'searchreplace',
-                        'visualblocks',
-                        'codesample',
-                        'fullscreen',
-                        'insertdatetime',
-                        'media',
-                        'table'
+                        "advlist",
+                        "autolink",
+                        "lists",
+                        "link",
+                        "image",
+                        "charmap",
+                        "preview",
+                        "anchor",
+                        "searchreplace",
+                        "visualblocks",
+                        "codesample",
+                        "fullscreen",
+                        "insertdatetime",
+                        "media",
+                        "table",
                       ],
                       toolbar:
-                        'undo redo |  ' +
-                        'codesample | bold italic forecolor | alignleft aligncenter ' +
-                        'alignright alignjustify | bullist numlist ',
+                        "undo redo |  " +
+                        "codesample | bold italic forecolor | alignleft aligncenter " +
+                        "alignright alignjustify | bullist numlist ",
                       content_style:
-                        'body { font-family:Inter; font-size:16px }',
-                      skin: mode === 'dark' ? 'oxide-dark' : 'oxide',
-                      content_css: mode === 'dark' ? 'dark' : 'light'
+                        "body { font-family:Inter; font-size:16px }",
+                      skin: mode === "dark" ? "oxide-dark" : "oxide",
+                      content_css: mode === "dark" ? "dark" : "light",
                     }}
                   />
                 </FormControl>
@@ -192,7 +201,7 @@ const Answer = ({ question, questionId, authorId }: Props) => {
               className="primary-gradient w-fit text-white"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </div>
         </form>
